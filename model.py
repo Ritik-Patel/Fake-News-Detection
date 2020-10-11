@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,10 +10,16 @@ from sklearn import metrics
 from sklearn.linear_model import PassiveAggressiveClassifier
 import os
 from wordcloud import WordCloud, STOPWORDS 
+import re
+import nltk
 
+#print(os.listdir("../input"))
 df = pd.read_csv('/content/train.csv',nrows=10000)
+
+df.head()
+
 df=df.fillna(' ')
-df['total']=df['title']+' '+df['author']+df['text']
+df['total']=df['title']+' '+df['text']
 words = ''
 stopwords = set(STOPWORDS) 
   
@@ -38,10 +45,46 @@ plt.figure(figsize = (8, 8), facecolor = None)
 plt.imshow(wordcloud) 
 plt.axis("off") 
 plt.tight_layout(pad = 0) 
-plt.show() 
+plt.show()
 
+df['total']
+
+nltk.download('punkt')
+nltk.download('stopwords')
+from nltk.corpus import stopwords
+stop_words = stopwords.words('english')
+print(stop_words)
+
+from nltk.stem import WordNetLemmatizer
+lemmatizer=WordNetLemmatizer()
+
+nltk.download('wordnet')
+
+lemmatizer=WordNetLemmatizer()
+for index,row in df.iterrows():
+    filter_sentence = ''
+    
+    sentence = row['total']
+    sentence = re.sub(r'[^\w\s]','',sentence) #cleaning
+    
+    words = nltk.word_tokenize(sentence) #tokenization
+    
+    words = [w for w in words if not w in stop_words]  #stopwords removal
+    
+    for word in words:
+        filter_sentence = filter_sentence + ' ' + str(lemmatizer.lemmatize(word)).lower()
+        
+    df.loc[index,'total'] = filter_sentence
+
+df.total[0]
+
+#replacing Body nan with Headline
+#for i in range(0,df.shape[0]-1):
+ #   if(df.text.isnull()[i]):
+  #      df.text[i] = df.title[i]
+        
 y = df.label
-X = df.text
+X = df.total
 
 #train_test separation
 X_train,X_test,y_train,y_test = train_test_split(X,y,test_size = 0.2)
